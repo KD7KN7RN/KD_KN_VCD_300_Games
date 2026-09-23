@@ -61,18 +61,11 @@
   <!-- شاشة اللعب -->
   <div id="game-screen" class="screen hidden">
     <div class="game-container">
-      <!-- D-Pad يسار (للوضع العرضي) -->
+      <!-- أزرار A/B (للوضع العرضي) -->
       <div class="left-controls landscape-only">
-        <div class="dpad">
-          <button class="dpad-btn up" data-btn="UP">▲</button>
-          <button class="dpad-btn left" data-btn="LEFT">◀</button>
-          <div class="dpad-center"></div>
-          <button class="dpad-btn right" data-btn="RIGHT">▶</button>
-          <button class="dpad-btn down" data-btn="DOWN">▼</button>
-        </div>
-        <div class="small-buttons">
-          <button class="small-btn" data-btn="SELECT">SELECT</button>
-          <button class="small-btn" data-btn="START">START</button>
+        <div class="action-buttons">
+          <button class="action-btn a-btn" data-btn="A">A</button>
+          <button class="action-btn b-btn" data-btn="B">B</button>
         </div>
       </div>
 
@@ -88,8 +81,16 @@
           <canvas id="game-canvas" width="256" height="240"></canvas>
         </div>
 
-        <!-- أزرار التحكم (الوضع الطولي) -->
+        <!-- أزرار التحكم (الوضع الطولي - معكوسة) -->
         <div class="portrait-controls portrait-only">
+          <div class="action-buttons portrait-action">
+            <button class="action-btn b-btn" data-btn="B">B</button>
+            <button class="action-btn a-btn" data-btn="A">A</button>
+          </div>
+          <div class="small-buttons portrait-small">
+            <button class="small-btn" data-btn="SELECT">SELECT</button>
+            <button class="small-btn" data-btn="START">START</button>
+          </div>
           <div class="dpad portrait-dpad">
             <button class="dpad-btn up" data-btn="UP">▲</button>
             <button class="dpad-btn left" data-btn="LEFT">◀</button>
@@ -97,21 +98,22 @@
             <button class="dpad-btn right" data-btn="RIGHT">▶</button>
             <button class="dpad-btn down" data-btn="DOWN">▼</button>
           </div>
-          <div class="small-buttons portrait-small">
-            <button class="small-btn" data-btn="SELECT">SELECT</button>
-            <button class="small-btn" data-btn="START">START</button>
-          </div>
-          <div class="action-buttons portrait-action">
-            <button class="action-btn b-btn" data-btn="B">B</button>
-            <button class="action-btn a-btn" data-btn="A">A</button>
-          </div>
         </div>
       </div>
 
-      <!-- A/B يمين (للوضع العرضي) -->
+      <!-- D-Pad (للوضع العرضي) -->
       <div class="right-controls landscape-only">
-        <button class="action-btn a-btn" data-btn="A">A</button>
-        <button class="action-btn b-btn" data-btn="B">B</button>
+        <div class="dpad">
+          <button class="dpad-btn up" data-btn="UP">▲</button>
+          <button class="dpad-btn left" data-btn="LEFT">◀</button>
+          <div class="dpad-center"></div>
+          <button class="dpad-btn right" data-btn="RIGHT">▶</button>
+          <button class="dpad-btn down" data-btn="DOWN">▼</button>
+        </div>
+        <div class="small-buttons">
+          <button class="small-btn" data-btn="SELECT">SELECT</button>
+          <button class="small-btn" data-btn="START">START</button>
+        </div>
       </div>
     </div>
   </div>

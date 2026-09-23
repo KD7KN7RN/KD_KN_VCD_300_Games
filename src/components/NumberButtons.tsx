@@ -29,8 +29,8 @@ export const NumberButtons = ({ onSelectGame, gamesCount, vertical = false }: Nu
             title={`تشغيل اللعبة رقم ${i}`}
             className={`relative group rounded-lg transition-all duration-150 active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed overflow-hidden border select-none ${
               isAvailable
-                ? 'bg-gradient-to-b from-[#13281c] to-[#0a160f] border-emerald-500/40 hover:border-emerald-400 hover:shadow-[0_0_12px_rgba(16,185,129,0.4)] text-emerald-300'
-                : 'bg-[#0a120d] border-emerald-900/30 text-emerald-800'
+                ? 'bg-gradient-to-b from-[#10244c] to-[#081226] border-blue-500/40 hover:border-sky-400 hover:shadow-[0_0_12px_rgba(37,99,235,0.4)] text-sky-300'
+                : 'bg-[#060c1c] border-blue-950/40 text-blue-900'
             } ${
               vertical ? 'w-10 sm:w-11 flex-1 max-h-[8.5dvh]' : 'w-9 h-9'
             }`}
@@ -45,9 +45,9 @@ export const NumberButtons = ({ onSelectGame, gamesCount, vertical = false }: Nu
               }}
             />
 
-            {/* رقم الزر الحديث مع تأثير الوهج الأخضر */}
+            {/* رقم الزر الحديث مع تأثير الوهج الأزرق الساطع */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <span className="font-black text-sm sm:text-base font-mono tracking-tighter drop-shadow-[0_0_6px_rgba(16,185,129,0.8)] group-hover:scale-110 transition-transform">
+              <span className="font-black text-sm sm:text-base font-mono tracking-tighter drop-shadow-[0_0_6px_rgba(56,189,248,0.8)] group-hover:scale-110 transition-transform">
                 {i}
               </span>
             </div>

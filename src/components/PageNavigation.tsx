@@ -26,14 +26,14 @@ export const PageNavigation = ({
         backgroundPosition: 'center',
       }}
     >
-      {/* إطار الشاشة مع توهج أخضر خفيف */}
-      <div className="relative w-full h-full max-h-full flex items-center justify-center rounded-2xl bg-[#040906]/90 border border-emerald-500/30 p-2 shadow-[0_0_30px_rgba(16,185,129,0.12)]">
+      {/* إطار الشاشة مع توهج أزرق خفيف */}
+      <div className="relative w-full h-full max-h-full flex items-center justify-center rounded-2xl bg-[#040916]/90 border border-blue-500/30 p-2 shadow-[0_0_30px_rgba(37,99,235,0.15)]">
         
         {/* زر الصفحة السابقة على الشاشة */}
         <button
           onClick={onPrevPage}
           disabled={currentPage === 1}
-          className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-950/80 hover:bg-emerald-800/80 active:scale-95 disabled:opacity-20 disabled:cursor-not-allowed border border-emerald-400/40 text-emerald-300 flex items-center justify-center transition-all shadow-lg backdrop-blur"
+          className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-950/80 hover:bg-blue-800/80 active:scale-95 disabled:opacity-20 disabled:cursor-not-allowed border border-sky-400/40 text-sky-300 flex items-center justify-center transition-all shadow-lg backdrop-blur"
           title="الصفحة السابقة"
         >
           <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -43,7 +43,7 @@ export const PageNavigation = ({
         <button
           onClick={onNextPage}
           disabled={currentPage === totalPages}
-          className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-950/80 hover:bg-emerald-800/80 active:scale-95 disabled:opacity-20 disabled:cursor-not-allowed border border-emerald-400/40 text-emerald-300 flex items-center justify-center transition-all shadow-lg backdrop-blur"
+          className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-950/80 hover:bg-blue-800/80 active:scale-95 disabled:opacity-20 disabled:cursor-not-allowed border border-sky-400/40 text-sky-300 flex items-center justify-center transition-all shadow-lg backdrop-blur"
           title="الصفحة التالية"
         >
           <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -61,23 +61,23 @@ export const PageNavigation = ({
               onLoad={() => setImageError(false)}
             />
           ) : (
-            /* بطاقة بديلة حديثة بالثيم الأخضر إذا لم تتوفر صورة الصفحة */
-            <div className="w-full max-w-md p-6 rounded-2xl bg-gradient-to-b from-[#0a1810] to-[#040a07] border border-emerald-500/40 shadow-[0_0_25px_rgba(16,185,129,0.2)] flex flex-col items-center text-center">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-950/70 border border-emerald-400/50 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                <Gamepad2 className="w-9 h-9 text-emerald-400 animate-pulse" />
+            /* بطاقة بديلة حديثة بالثيم الأزرق إذا لم تتوفر صورة الصفحة */
+            <div className="w-full max-w-md p-6 rounded-2xl bg-gradient-to-b from-[#0c1c38] to-[#040816] border border-blue-500/40 shadow-[0_0_25px_rgba(37,99,235,0.25)] flex flex-col items-center text-center">
+              <div className="w-16 h-16 rounded-2xl bg-blue-950/70 border border-sky-400/50 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(37,99,235,0.35)]">
+                <Gamepad2 className="w-9 h-9 text-sky-400 animate-pulse" />
               </div>
 
-              <span className="text-xs uppercase tracking-widest text-emerald-400 font-mono mb-1">
+              <span className="text-xs uppercase tracking-widest text-sky-400 font-mono mb-1">
                 VCD 300 ARCADE
               </span>
               <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">
-                صفحة <span className="text-emerald-400 font-mono">{currentPage}</span> / {totalPages}
+                صفحة <span className="text-sky-400 font-mono">{currentPage}</span> / {totalPages}
               </h2>
-              <p className="text-xs sm:text-sm text-emerald-300/80 mb-4">
+              <p className="text-xs sm:text-sm text-sky-200/80 mb-4">
                 ألعاب من {((currentPage - 1) * 10) + 1} إلى {currentPage * 10}
               </p>
 
-              <div className="w-full py-2.5 px-4 rounded-xl bg-emerald-950/40 border border-emerald-500/20 text-[11px] sm:text-xs text-emerald-300">
+              <div className="w-full py-2.5 px-4 rounded-xl bg-blue-950/40 border border-blue-500/20 text-[11px] sm:text-xs text-sky-300">
                 اضغط على أحد الأرقام (0-9) من القائمة الجانبية لتشغيل اللعبة مباشرة
               </div>
             </div>
