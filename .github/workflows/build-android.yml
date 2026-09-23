@@ -2,15 +2,26 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: build-android-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      # أضفها في: Settings → Secrets and variables → Actions → Secrets
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
 
     steps:
       - name: Checkout
@@ -20,7 +31,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Setup Java 21
         uses: actions/setup-java@v4
@@ -28,11 +38,25 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Install dependencies
-        run: npm ci
+      # المشروع لا يحتوي package-lock.json، لذلك npm ci سيفشل.
+      # نستخدم npm ci إن وُجد الملف، وإلا npm install.
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package.json', 'package-lock.json') }}
+          restore-keys: npm-${{ runner.os }}-
 
-      # ملف capacitor.config.ts يحتوي على server.url يشير إلى موقع Lovable،
-      # فيتم حذفه حتى يحمّل التطبيق ملفات dist المضمّنة داخل الـ APK
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install --no-audit --no-fund
+          fi
+
+      # capacitor.config.ts يحتوي server.url يشير إلى موقع Lovable،
+      # نحذفه حتى يحمّل التطبيق ملفات dist المضمّنة داخل الـ APK
       - name: Remove remote server URL from Capacitor config
         run: perl -0pi -e 's/,\s*server:\s*\{.*?\}//s' capacitor.config.ts
 
@@ -45,14 +69,24 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Build debug APK
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon
 
       - name: Rename APK
         run: cp android/app/build/outputs/apk/debug/app-debug.apk vcd-300-games.apk
+
+      - name: Upload APK as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vcd-300-games-apk
+          path: vcd-300-games.apk
+          retention-days: 14
 
       # الرفع إلى Releases لا يستهلك حصة تخزين الـ artifacts
       - name: Publish APK to GitHub Release
