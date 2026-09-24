@@ -2,98 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
-  :root {
-    --background: 222 47% 7%;
-    --foreground: 213 31% 96%;
-
-    --card: 222 40% 10%;
-    --card-foreground: 213 31% 96%;
-
-    --popover: 222 42% 10%;
-    --popover-foreground: 213 31% 96%;
-
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 7%;
-
-    --secondary: 222 35% 15%;
-    --secondary-foreground: 213 31% 94%;
-
-    --muted: 222 30% 13%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 199 89% 48%;
-    --accent-foreground: 222 47% 7%;
-
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 222 30% 19%;
-    --input: 222 30% 19%;
-    --ring: 217 91% 60%;
-
-    --radius: 0.625rem;
-
-    --sidebar-background: 222 42% 8%;
-    --sidebar-foreground: 213 25% 92%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 222 47% 7%;
-    --sidebar-accent: 222 35% 13%;
-    --sidebar-accent-foreground: 213 31% 95%;
-    --sidebar-border: 222 30% 19%;
-    --sidebar-ring: 217 91% 60%;
-  }
-
-  .dark {
-    --background: 222 47% 7%;
-    --foreground: 213 31% 96%;
-
-    --card: 222 40% 10%;
-    --card-foreground: 213 31% 96%;
-
-    --popover: 222 42% 10%;
-    --popover-foreground: 213 31% 96%;
-
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 7%;
-
-    --secondary: 222 35% 15%;
-    --secondary-foreground: 213 31% 94%;
-
-    --muted: 222 30% 13%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 199 89% 48%;
-    --accent-foreground: 222 47% 7%;
-
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 222 30% 19%;
-    --input: 222 30% 19%;
-    --ring: 217 91% 60%;
-
-    --sidebar-background: 222 42% 8%;
-    --sidebar-foreground: 213 25% 92%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 222 47% 7%;
-    --sidebar-accent: 222 35% 13%;
-    --sidebar-accent-foreground: 213 31% 95%;
-    --sidebar-border: 222 30% 19%;
-    --sidebar-ring: 217 91% 60%;
+  body {
+    background-color: #060410;
+    color: #e2e8f0;
+    font-family: 'Tajawal', sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
+/* Authentic Deltarune UI Box Styling */
+.deltarune-box {
+  background: #000000;
+  border: 4px solid #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px #000000;
+}
 
-  body {
-    @apply bg-background text-foreground;
-  }
+.deltarune-box-cyan {
+  background: #000000;
+  border: 3px solid #00ffff;
+  border-radius: 4px;
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.25);
+}
+
+.deltarune-box-purple {
+  background: #0a0518;
+  border: 3px solid #a855f7;
+  border-radius: 4px;
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.3);
+}
+
+/* Scanline / CRT effect overlay */
+.crt-overlay {
+  background: linear-gradient(
+    rgba(18, 16, 26, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+}
+
+/* Custom scrollbar for Tenna Editor */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #070514;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a1d6e;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4632aa;
 }

@@ -1,0 +1,8 @@
+{
+  "name": "Retro VCD Arcade",
+  "description": "محاكي NES يعمل بدون إنترنت مع قائمة ألعاب Retro VCD 300",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
