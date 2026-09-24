@@ -717,7 +717,7 @@ export const NESEmulator = ({ game, onExit, onJoinAsPlayer2Requested }: NESEmula
         stateObj.papuState = papuState;
       }
 
-      await saveSlot(game.id, slot, game.name, stateObj);
+      await saveSlot(game.id, game.name, slot, stateObj);
       await refreshSlots();
       showHud(`تم حفظ اللعبة بنجاح في خانة ${slot}`, 'success');
     } catch (e) {
