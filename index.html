@@ -1,19 +1,26 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff0044'><path d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/></svg>" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>DELTARUNE Android APK Wrapper & Tenna Save Editor</title>
-    <meta name="description" content="غلاف برمجي حقيقي لتشغيل لعبة DELTARUNE وقراءة ملفات game.droid ودعم الفصول 1 إلى 5 مع محرر الحفظ Tenna Editor المدمج" />
-    <meta property="og:title" content="DELTARUNE Android APK Wrapper & Tenna Save Editor" />
-    <meta property="og:description" content="غلاف برمجي حقيقي لتشغيل لعبة DELTARUNE وقراءة ملفات game.droid ودعم الفصول 1 إلى 5 مع محرر الحفظ Tenna Editor المدمج" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Press+Start+2P&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Retro VCD Arcade</title>
+    <meta name="description" content="محاكي NES يعمل بدون إنترنت مع قائمة ألعاب Retro VCD 300" />
+
+    <meta property="og:title" content="Retro VCD Arcade" />
+    <meta property="og:description" content="محاكي NES يعمل بدون إنترنت مع قائمة ألعاب Retro VCD 300" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/placeholder.svg" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="/placeholder.svg" />
   </head>
-  <body class="bg-[#060410] text-slate-100 overflow-hidden select-none font-sans antialiased">
+
+  <body>
     <div id="root"></div>
+    <!-- Local offline emulator library (UMD) -->
+    <script src="/assets/jsnes.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
+
