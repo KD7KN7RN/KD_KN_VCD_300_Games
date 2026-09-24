@@ -19,9 +19,16 @@ const DB_NAME = 'VCD_300_SAVES_DB';
 const DB_VERSION = 1;
 const STORE_NAME = 'game_saves';
 
+let dbPromise: Promise<IDBDatabase> | null = null;
+
 function openDatabase(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
+  if (dbPromise) {
+    return dbPromise;
+  }
+
+  dbPromise = new Promise((resolve, reject) => {
     if (typeof indexedDB === 'undefined') {
+      dbPromise = null;
       return reject(new Error('IndexedDB not supported'));
     }
 
@@ -34,9 +41,27 @@ function openDatabase(): Promise<IDBDatabase> {
       }
     };
 
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error || new Error('Failed to open IndexedDB'));
+    req.onsuccess = () => {
+      const db = req.result;
+      // If the connection drops or another tab upgrades the DB, drop the
+      // cached promise so the next call reopens a fresh connection instead
+      // of reusing a dead one.
+      db.onclose = () => {
+        dbPromise = null;
+      };
+      db.onversionchange = () => {
+        db.close();
+        dbPromise = null;
+      };
+      resolve(db);
+    };
+    req.onerror = () => {
+      dbPromise = null;
+      reject(req.error || new Error('Failed to open IndexedDB'));
+    };
   });
+
+  return dbPromise;
 }
 
 function getSlotKey(gameId: number, slot: number): string {
@@ -149,33 +174,35 @@ export async function getGameSlotsStatus(
     4: null,
   };
 
-  for (let slot = 1; slot <= 4; slot++) {
-    const key = getSlotKey(gameId, slot);
-    try {
-      const cached = localStorage.getItem(`vcd_meta_${key}`);
-      if (cached) {
-        status[slot] = JSON.parse(cached) as SaveSlotMetadata;
-        continue;
+  await Promise.all(
+    [1, 2, 3, 4].map(async (slot) => {
+      const key = getSlotKey(gameId, slot);
+      try {
+        const cached = localStorage.getItem(`vcd_meta_${key}`);
+        if (cached) {
+          status[slot] = JSON.parse(cached) as SaveSlotMetadata;
+          return;
+        }
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore
-    }
 
-    try {
-      const full = await loadSlot(gameId, slot);
-      if (full) {
-        status[slot] = {
-          slot,
-          gameId,
-          gameName: full.gameName,
-          timestamp: full.timestamp,
-          dateFormatted: full.dateFormatted || new Date(full.timestamp).toLocaleTimeString(),
-        };
+      try {
+        const full = await loadSlot(gameId, slot);
+        if (full) {
+          status[slot] = {
+            slot,
+            gameId,
+            gameName: full.gameName,
+            timestamp: full.timestamp,
+            dateFormatted: full.dateFormatted || new Date(full.timestamp).toLocaleTimeString(),
+          };
+        }
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore
-    }
-  }
+    })
+  );
 
   return status;
 }
