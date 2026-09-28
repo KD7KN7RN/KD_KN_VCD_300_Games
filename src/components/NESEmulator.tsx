@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { ASSETS, GAMES_CONFIG } from '@/config/assets';
 import { Game } from '@/hooks/useGames';
 import { getRomDataByGameId } from '@/lib/gamesZip';
-import { saveSlot, loadSlot, clearSlot, getGameSlotsStatus, SaveSlotMetadata } from '@/lib/saveStates';
+import { saveSlot, loadSlot, clearSlot, clearAllSlots, getGameSlotsStatus, SaveSlotMetadata } from '@/lib/saveStates';
 import { 
   ArrowUp, 
   ArrowDown, 
@@ -204,6 +204,40 @@ export const NESEmulator = ({ game, onExit, onJoinAsPlayer2Requested }: NESEmula
     3: null,
     4: null,
   });
+  const slotsStatusRef = useRef(slotsStatus);
+  const busySlotsRef = useRef<Set<number>>(new Set());
+  const pendingSaveOperationsRef = useRef<Set<Promise<unknown>>>(new Set());
+  const [busySlots, setBusySlots] = useState<Set<number>>(new Set());
+
+  const updateSlotsStatus = useCallback((
+    updater: (current: Record<number, SaveSlotMetadata | null>) => Record<number, SaveSlotMetadata | null>
+  ) => {
+    setSlotsStatus((current) => {
+      const next = updater(current);
+      slotsStatusRef.current = next;
+      return next;
+    });
+  }, []);
+
+  const runSaveOperation = useCallback(async (
+    slot: number,
+    operation: () => Promise<void>
+  ) => {
+    if (busySlotsRef.current.has(slot)) return;
+
+    busySlotsRef.current.add(slot);
+    setBusySlots(new Set(busySlotsRef.current));
+
+    let trackedPromise: Promise<void>;
+    trackedPromise = operation().finally(() => {
+      busySlotsRef.current.delete(slot);
+      setBusySlots(new Set(busySlotsRef.current));
+      pendingSaveOperationsRef.current.delete(trackedPromise);
+    });
+
+    pendingSaveOperationsRef.current.add(trackedPromise);
+    await trackedPromise;
+  }, []);
 
   // نافذة تأكيد حذف الحفظ
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -250,6 +284,7 @@ export const NESEmulator = ({ game, onExit, onJoinAsPlayer2Requested }: NESEmula
   const refreshSlots = useCallback(async () => {
     try {
       const status = await getGameSlotsStatus(game.id);
+      slotsStatusRef.current = status;
       setSlotsStatus(status);
     } catch (e) {
       console.error('Error reading save slots:', e);
@@ -700,7 +735,7 @@ export const NESEmulator = ({ game, onExit, onJoinAsPlayer2Requested }: NESEmula
     };
   }, [ensureAudioRunning, player2Connected]);
 
-  // حفظ الحالة
+  // حفظ الحالة — كل خانة لها قفل مستقل لمنع السباق بين الضغطات السريعة.
   const handleSaveState = async (slot: number) => {
     ensureAudioRunning();
     playSound('buttonPress');
@@ -710,20 +745,21 @@ export const NESEmulator = ({ game, onExit, onJoinAsPlayer2Requested }: NESEmula
       return;
     }
 
-    try {
-      const stateObj = nesRef.current.toJSON();
-      const papuState = serializePapu(nesRef.current.papu);
-      if (papuState) {
-        stateObj.papuState = papuState;
-      }
+    void runSaveOperation(slot, async () => {
+      try {
+        // toJSON متزامن بطبيعته، لذلك ننفذه مرة واحدة فقط لكل ضغطة فعلية.
+        const stateObj = nesRef.current!.toJSON();
+        const papuState = serializePapu(nesRef.current!.papu);
+        if (papuState) stateObj.papuState = papuState;
 
-      await saveSlot(game.id, game.name, slot, stateObj);
-      await refreshSlots();
-      showHud(`تم حفظ اللعبة بنجاح في خانة ${slot}`, 'success');
-    } catch (e) {
-      console.error('Save state failed:', e);
-      showHud(`فشل حفظ الحالة في خانة ${slot}`, 'error');
-    }
+        const metadata = await saveSlot(game.id, game.name, slot, stateObj);
+        updateSlotsStatus((current) => ({ ...current, [slot]: metadata }));
+        showHud(`تم حفظ اللعبة بنجاح في خانة ${slot}`, 'success');
+      } catch (e) {
+        console.error('Save state failed:', e);
+        showHud(`فشل حفظ الحالة في خانة ${slot}`, 'error');
+      }
+    });
   };
 
   // استعادة الحالة
@@ -736,66 +772,89 @@ export const NESEmulator = ({ game, onExit, onJoinAsPlayer2Requested }: NESEmula
       return;
     }
 
-    try {
-      const saved = await loadSlot(game.id, slot);
-      if (!saved || !saved.state) {
-        showHud(`خانة الحفظ ${slot} فارغة، قم بالحفظ أولاً`, 'info');
-        return;
+    void runSaveOperation(slot, async () => {
+      try {
+        const saved = await loadSlot(game.id, slot);
+        if (!saved || !saved.state) {
+          showHud(`خانة الحفظ ${slot} فارغة، قم بالحفظ أولاً`, 'info');
+          return;
+        }
+
+        const stateObj = saved.state as Record<string, unknown>;
+        nesRef.current!.fromJSON(stateObj);
+
+        const papuState = (stateObj.papuState || stateObj.papu) as PapuState | undefined;
+        const papu = nesRef.current!.papu;
+        if (papu) restorePapuState(papu, papuState);
+
+        showHud(`تم استعادة اللعبة من خانة ${slot} بنجاح`, 'success');
+      } catch (e) {
+        console.error('Restore state failed:', e);
+        showHud(`تعذر استعادة خانة الحفظ ${slot}`, 'error');
       }
-
-      const stateObj = saved.state as Record<string, unknown>;
-      nesRef.current.fromJSON(stateObj);
-
-      const papuState = (stateObj.papuState || stateObj.papu) as PapuState | undefined;
-      const papu = nesRef.current.papu;
-      if (papu) {
-        restorePapuState(papu, papuState);
-      }
-
-      showHud(`تم استعادة اللعبة من خانة ${slot} بنجاح`, 'success');
-    } catch (e) {
-      console.error('Restore state failed:', e);
-      showHud(`تعذر استعادة خانة الحفظ ${slot}`, 'error');
-    }
+    });
   };
 
-  // حذف حالة الحفظ (طلب المستخدم: "اضف زر حدف الحفض")
+  // حذف حالة الحفظ
   const handleDeleteSlot = async (slot: number) => {
     ensureAudioRunning();
     playSound('buttonPress');
-    try {
-      await clearSlot(game.id, slot);
-      await refreshSlots();
-      showHud(`تم حذف خانة الحفظ ${slot} بنجاح`, 'info');
-    } catch (e) {
-      console.error('Delete slot failed:', e);
-      showHud(`فشل حذف خانة الحفظ ${slot}`, 'error');
-    }
+
+    void runSaveOperation(slot, async () => {
+      try {
+        await clearSlot(game.id, slot);
+        updateSlotsStatus((current) => ({ ...current, [slot]: null }));
+        showHud(`تم حذف خانة الحفظ ${slot} بنجاح`, 'info');
+      } catch (e) {
+        console.error('Delete slot failed:', e);
+        showHud(`فشل حذف خانة الحفظ ${slot}`, 'error');
+      }
+    });
   };
 
-  // حذف جميع خانات الحفظ لهذه اللعبة
+  // حذف جميع خانات الحفظ في معاملة واحدة
   const handleDeleteAllSlots = async () => {
     ensureAudioRunning();
     playSound('buttonPress');
-    try {
-      for (let s = 1; s <= 4; s++) {
-        await clearSlot(game.id, s);
-      }
-      await refreshSlots();
-      setDeleteModalOpen(false);
-      showHud('تم حذف جميع خانات الحفظ لهذه اللعبة', 'info');
-    } catch (e) {
-      console.error('Delete all slots failed:', e);
-      showHud('فشل حذف خانات الحفظ', 'error');
+
+    if (busySlotsRef.current.size > 0) {
+      showHud('انتظر انتهاء عملية الحفظ الحالية', 'info');
+      return;
     }
+
+    const operation = (async () => {
+      try {
+        [1, 2, 3, 4].forEach((slot) => busySlotsRef.current.add(slot));
+        setBusySlots(new Set(busySlotsRef.current));
+
+        await clearAllSlots(game.id);
+        updateSlotsStatus(() => ({ 1: null, 2: null, 3: null, 4: null }));
+        setDeleteModalOpen(false);
+        showHud('تم حذف جميع خانات الحفظ لهذه اللعبة', 'info');
+      } catch (e) {
+        console.error('Delete all slots failed:', e);
+        showHud('فشل حذف خانات الحفظ', 'error');
+      } finally {
+        [1, 2, 3, 4].forEach((slot) => busySlotsRef.current.delete(slot));
+        setBusySlots(new Set(busySlotsRef.current));
+      }
+    })();
+
+    pendingSaveOperationsRef.current.add(operation);
+    await operation.finally(() => pendingSaveOperationsRef.current.delete(operation));
   };
 
-  const handleExit = () => {
+  const handleExit = async () => {
     ensureAudioRunning();
     playSound('buttonPress');
-    if (hostRef.current) {
-      hostRef.current.destroy();
+
+    // لا نغادر قبل اكتمال أي كتابة بدأت بالفعل، حتى لا يظهر الحفظ مضغوطاً
+    // في الواجهة ثم يختفي/يبقى غير قابل للاستعادة بعد الخروج.
+    if (pendingSaveOperationsRef.current.size) {
+      await Promise.allSettled([...pendingSaveOperationsRef.current]);
     }
+
+    if (hostRef.current) hostRef.current.destroy();
     onExit();
   };
 
@@ -986,6 +1045,7 @@ export const NESEmulator = ({ game, onExit, onJoinAsPlayer2Requested }: NESEmula
                     key={`delete-slot-${slot}`}
                     disabled={!hasSave}
                     onClick={() => handleDeleteSlot(slot)}
+                    disabled={busySlots.has(slot)}
                     className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-between transition-all ${
                       hasSave
                         ? 'bg-red-950/60 hover:bg-red-800/80 border-red-500/40 text-red-200 active:scale-95'
@@ -1071,6 +1131,7 @@ export const NESEmulator = ({ game, onExit, onJoinAsPlayer2Requested }: NESEmula
                   <button
                     key={`save-slot-${slot}`}
                     onClick={() => handleSaveState(slot)}
+                    disabled={busySlots.has(slot)}
                     title={`حفظ في الخانة ${slot}${slotsStatus[slot]?.dateFormatted ? ` (${slotsStatus[slot]?.dateFormatted})` : ''}`}
                     className={`relative px-1.5 sm:px-2 py-1 rounded text-[10px] sm:text-xs font-bold transition-all active:scale-90 flex items-center gap-0.5 ${
                       hasSave
@@ -1097,6 +1158,7 @@ export const NESEmulator = ({ game, onExit, onJoinAsPlayer2Requested }: NESEmula
                   <button
                     key={`restore-slot-${slot}`}
                     onClick={() => handleRestoreState(slot)}
+                    disabled={busySlots.has(slot)}
                     title={`استعادة من الخانة ${slot}${slotsStatus[slot]?.dateFormatted ? ` (${slotsStatus[slot]?.dateFormatted})` : ' (فارغة)'}`}
                     className={`px-1.5 sm:px-2 py-1 rounded text-[10px] sm:text-xs font-bold transition-all active:scale-90 flex items-center gap-0.5 ${
                       hasSave
@@ -1244,6 +1306,7 @@ export const NESEmulator = ({ game, onExit, onJoinAsPlayer2Requested }: NESEmula
                     <button
                       key={`portrait-save-${slot}`}
                       onClick={() => handleSaveState(slot)}
+                      disabled={busySlots.has(slot)}
                       className={`py-1.5 px-1 rounded text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1 ${
                         hasSave
                           ? 'bg-blue-600 text-white shadow-[0_0_6px_rgba(37,99,235,0.4)] border border-sky-400'
@@ -1271,6 +1334,7 @@ export const NESEmulator = ({ game, onExit, onJoinAsPlayer2Requested }: NESEmula
                     <button
                       key={`portrait-restore-${slot}`}
                       onClick={() => handleRestoreState(slot)}
+                      disabled={busySlots.has(slot)}
                       className={`py-1.5 px-1 rounded text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1 ${
                         hasSave
                           ? 'bg-cyan-600 text-white shadow-[0_0_6px_rgba(8,145,178,0.4)] border border-cyan-400'
